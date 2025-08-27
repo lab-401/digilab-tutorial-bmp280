@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMP280 Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section h2 {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .calibration-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+
+        input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calibration-grid input {
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .result-label {
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-unit {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .debug {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .debug-row {
+            margin: 5px 0;
+        }
+
+        .altitude-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .altitude-button {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            margin: 15px auto;
+        }
+
+        .altitude-button:hover {
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .altitude-disclaimer {
+            font-style: italic;
+            font-size: 12px;
+            text-align: center;
+            opacity: 0.9;
+            margin: 10px 20px;
+            line-height: 1.5;
+        }
+
+        .altitude-result {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .altitude-value {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .altitude-details {
+            font-size: 14px;
+            opacity: 0.9;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        .error-frame {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .load-example {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .load-example:hover {
+            background: #218838;
+        }
+
+        @media (max-width: 600px) {
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-grid, .calibration-grid {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="load-example" onclick="loadExample()">Load Example Values</button>
+        <h1>🌡️ BMP280 Temperature & Pressure Calculator</h1>
+        
+        <div class="section">
+            <h2>📊 Temperature Registers (0xFA - 0xFC)</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="temp-fa">0xFA (MSB)</label>
+                    <input type="text" id="temp-fa" placeholder="88" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label for="temp-fb">0xFB (LSB)</label>
+                    <input type="text" id="temp-fb" placeholder="27" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label for="temp-fc">0xFC (XLSB)</label>
+                    <input type="text" id="temp-fc" placeholder="00" maxlength="2">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌊 Pressure Registers (0xF7 - 0xF9)</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="press-f7">0xF7 (MSB)</label>
+                    <input type="text" id="press-f7" placeholder="54" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label for="press-f8">0xF8 (LSB)</label>
+                    <input type="text" id="press-f8" placeholder="8C" maxlength="2">
+                </div>
+                <div class="input-group">
+                    <label for="press-f9">0xF9 (XLSB)</label>
+                    <input type="text" id="press-f9" placeholder="00" maxlength="2">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚙️ Calibration Data (0x88 - 0xA1)</h2>
+            <div class="calibration-grid" id="calibration-grid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <button onclick="calculate()">Calculate Temperature & Pressure</button>
+
+        <div class="results" id="results">
+            <h2>📈 Calculated Results</h2>
+            <div class="result-grid">
+                <div class="result-card">
+                    <div class="result-label">Temperature</div>
+                    <div class="result-value" id="temp-result">--</div>
+                    <div class="result-unit">°C</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Pressure</div>
+                    <div class="result-value" id="press-result">--</div>
+                    <div class="result-unit">hPa</div>
+                </div>
+            </div>
+            <div class="debug" id="debug">
+                <!-- Debug information will appear here -->
+            </div>
+            <div class="altitude-section" id="altitude-section" style="display: none;">
+                <button class="altitude-button" onclick="estimateAltitude()">
+                    📍 Estimate Altitude (Requires Location)
+                </button>
+                <div class="altitude-disclaimer">
+                    Location data is used to send an anonymous request to the Open-Meteo API, 
+                    to retrieve the QNH/Sea-level air pressure value nearest to you. 
+                    This allows us to estimate your current altitude.
+                </div>
+                <div id="altitude-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store calculated values
+        let currentPressure = null;
+        let currentTemperature = null;
+
+        // Generate calibration input fields
+        function initCalibrationGrid() {
+            const grid = document.getElementById('calibration-grid');
+            for (let addr = 0x88; addr <= 0xA1; addr++) {
+                const div = document.createElement('div');
+                div.className = 'input-group';
+                
+                const label = document.createElement('label');
+                label.textContent = `0x${addr.toString(16).toUpperCase()}`;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `cal-${addr.toString(16)}`;
+                input.placeholder = '00';
+                input.maxLength = 2;
+                
+                div.appendChild(label);
+                div.appendChild(input);
+                grid.appendChild(div);
+            }
+        }
+
+        // Load example values
+        function loadExample() {
+            // Temperature registers
+            document.getElementById('temp-fa').value = '88';
+            document.getElementById('temp-fb').value = '27';
+            document.getElementById('temp-fc').value = '00';
+            
+            // Pressure registers
+            document.getElementById('press-f7').value = '54';
+            document.getElementById('press-f8').value = '8c';
+            document.getElementById('press-f9').value = '00';
+            
+            // Calibration data
+            const calData = {
+                '88': '37', '89': '70', '8a': 'd0', '8b': '68',
+                '8c': '32', '8d': '00', '8e': '1c', '8f': '90',
+                '90': '25', '91': 'd6', '92': 'd0', '93': '0b',
+                '94': '04', '95': '1b', '96': '40', '97': '00',
+                '98': 'f9', '99': 'ff', '9a': 'b4', '9b': '2d',
+                '9c': 'e8', '9d': 'd1', '9e': '88', '9f': '13',
+                'a0': '00', 'a1': '4b'
+            };
+            
+            for (const [addr, value] of Object.entries(calData)) {
+                const input = document.getElementById(`cal-${addr}`);
+                if (input) input.value = value;
+            }
+        }
+
+        function parseHex(value) {
+            return parseInt(value, 16);
+        }
+
+        function toSigned16(value) {
+            return value > 32767 ? value - 65536 : value;
+        }
+
+        function calculate() {
+            try {
+                // Read temperature registers
+                const tempFA = parseHex(document.getElementById('temp-fa').value);
+                const tempFB = parseHex(document.getElementById('temp-fb').value);
+                const tempFC = parseHex(document.getElementById('temp-fc').value);
+                
+                // Read pressure registers
+                const pressF7 = parseHex(document.getElementById('press-f7').value);
+                const pressF8 = parseHex(document.getElementById('press-f8').value);
+                const pressF9 = parseHex(document.getElementById('press-f9').value);
+                
+                // Calculate raw ADC values (20-bit)
+                const adcT = (tempFA << 12) | (tempFB << 4) | (tempFC >> 4);
+                const adcP = (pressF7 << 12) | (pressF8 << 4) | (pressF9 >> 4);
+                
+                // Read calibration data (little-endian)
+                const cal88 = parseHex(document.getElementById('cal-88').value);
+                const cal89 = parseHex(document.getElementById('cal-89').value);
+                const cal8a = parseHex(document.getElementById('cal-8a').value);
+                const cal8b = parseHex(document.getElementById('cal-8b').value);
+                const cal8c = parseHex(document.getElementById('cal-8c').value);
+                const cal8d = parseHex(document.getElementById('cal-8d').value);
+                const cal8e = parseHex(document.getElementById('cal-8e').value);
+                const cal8f = parseHex(document.getElementById('cal-8f').value);
+                const cal90 = parseHex(document.getElementById('cal-90').value);
+                const cal91 = parseHex(document.getElementById('cal-91').value);
+                const cal92 = parseHex(document.getElementById('cal-92').value);
+                const cal93 = parseHex(document.getElementById('cal-93').value);
+                const cal94 = parseHex(document.getElementById('cal-94').value);
+                const cal95 = parseHex(document.getElementById('cal-95').value);
+                const cal96 = parseHex(document.getElementById('cal-96').value);
+                const cal97 = parseHex(document.getElementById('cal-97').value);
+                const cal98 = parseHex(document.getElementById('cal-98').value);
+                const cal99 = parseHex(document.getElementById('cal-99').value);
+                const cal9a = parseHex(document.getElementById('cal-9a').value);
+                const cal9b = parseHex(document.getElementById('cal-9b').value);
+                const cal9c = parseHex(document.getElementById('cal-9c').value);
+                const cal9d = parseHex(document.getElementById('cal-9d').value);
+                const cal9e = parseHex(document.getElementById('cal-9e').value);
+                const cal9f = parseHex(document.getElementById('cal-9f').value);
+                
+                // Parse calibration coefficients (little-endian)
+                const dig_T1 = cal88 | (cal89 << 8);
+                const dig_T2 = toSigned16(cal8a | (cal8b << 8));
+                const dig_T3 = toSigned16(cal8c | (cal8d << 8));
+                
+                const dig_P1 = cal8e | (cal8f << 8);
+                const dig_P2 = toSigned16(cal90 | (cal91 << 8));
+                const dig_P3 = toSigned16(cal92 | (cal93 << 8));
+                const dig_P4 = toSigned16(cal94 | (cal95 << 8));
+                const dig_P5 = toSigned16(cal96 | (cal97 << 8));
+                const dig_P6 = toSigned16(cal98 | (cal99 << 8));
+                const dig_P7 = toSigned16(cal9a | (cal9b << 8));
+                const dig_P8 = toSigned16(cal9c | (cal9d << 8));
+                const dig_P9 = toSigned16(cal9e | (cal9f << 8));
+                
+                // Calculate temperature
+                let var1 = Math.floor(((((adcT >> 3) - (dig_T1 << 1))) * dig_T2) / Math.pow(2, 11));
+                let var2 = Math.floor((((((adcT >> 4) - dig_T1) * ((adcT >> 4) - dig_T1)) >> 12) * dig_T3) / Math.pow(2, 14));
+                let t_fine = var1 + var2;
+                let T = Math.floor((t_fine * 5 + 128) / 256);
+                let tempCelsius = T / 100.0;
+                
+                // Calculate pressure using BigInt for 64-bit math
+                let pVar1 = BigInt(t_fine) - 128000n;
+                let pVar2 = pVar1 * pVar1 * BigInt(dig_P6);
+                pVar2 = pVar2 + ((pVar1 * BigInt(dig_P5)) << 17n);
+                pVar2 = pVar2 + (BigInt(dig_P4) << 35n);
+                pVar1 = ((pVar1 * pVar1 * BigInt(dig_P3)) >> 8n) + ((pVar1 * BigInt(dig_P2)) << 12n);
+                pVar1 = (((1n << 47n) + pVar1) * BigInt(dig_P1)) >> 33n;
+                
+                let pressure = 0;
+                if (pVar1 !== 0n) {
+                    let p = BigInt(1048576 - adcP);
+                    p = (((p << 31n) - pVar2) * 3125n) / pVar1;
+                    pVar1 = (BigInt(dig_P9) * (p >> 13n) * (p >> 13n)) >> 25n;
+                    pVar2 = (BigInt(dig_P8) * p) >> 19n;
+                    p = ((p + pVar1 + pVar2) >> 8n) + (BigInt(dig_P7) << 4n);
+                    pressure = Number(p) / 256.0 / 100.0; // Convert to hPa
+                }
+                
+                // Display results
+                document.getElementById('temp-result').textContent = tempCelsius.toFixed(2);
+                document.getElementById('press-result').textContent = pressure.toFixed(2);
+                document.getElementById('results').style.display = 'block';
+                
+                // Store values for altitude calculation
+                currentPressure = pressure;
+                currentTemperature = tempCelsius;
+                
+                // Show altitude section
+                document.getElementById('altitude-section').style.display = 'block';
+                
+                // Debug information
+                const debug = document.getElementById('debug');
+                debug.innerHTML = `
+                    <div class="debug-row"><strong>Debug Information:</strong></div>
+                    <div class="debug-row">Raw Temperature ADC: ${adcT} (0x${adcT.toString(16).toUpperCase()})</div>
+                    <div class="debug-row">Raw Pressure ADC: ${adcP} (0x${adcP.toString(16).toUpperCase()})</div>
+                    <div class="debug-row">t_fine: ${t_fine}</div>
+                    <div class="debug-row">dig_T1: ${dig_T1}, dig_T2: ${dig_T2}, dig_T3: ${dig_T3}</div>
+                    <div class="debug-row">dig_P1: ${dig_P1}, dig_P2: ${dig_P2}, dig_P3: ${dig_P3}</div>
+                `;
+                
+            } catch (error) {
+                alert('Error: Please ensure all values are valid hexadecimal numbers.\n' + error.message);
+            }
+        }
+
+        async function estimateAltitude() {
+            const resultsDiv = document.getElementById('altitude-results');
+            
+            // Show loading state
+            resultsDiv.innerHTML = '<div style="text-align: center;"><div class="loading"></div> Getting your location...</div>';
+            
+            try {
+                // Request geolocation
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+                
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                // Update loading message
+                resultsDiv.innerHTML = '<div style="text-align: center;"><div class="loading"></div> Fetching QNH data from Open-Meteo...</div>';
+                
+                // Fetch QNH from Open-Meteo
+                const url = `https://api.open-meteo.com/v1/forecast?` +
+                           `latitude=${lat}&longitude=${lon}&` +
+                           `current=pressure_msl,surface_pressure`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch weather data');
+                }
+                
+                const data = await response.json();
+                const qnh = data.current.pressure_msl;
+                
+                // Calculate altitude using barometric formula
+                const altitude = 44330 * (1 - Math.pow(currentPressure / qnh, 0.1903));
+                
+                // Calculate altitude using temperature-compensated formula
+                const altitudeTemp = ((287.05 * (currentTemperature + 273.15)) / 9.80665) * 
+                                    Math.log(qnh / currentPressure);
+                
+                // Display results
+                resultsDiv.innerHTML = `
+                    <div class="altitude-result">
+                        <div class="altitude-details">📍 Location: ${lat.toFixed(4)}°, ${lon.toFixed(4)}°</div>
+                        <div class="altitude-details">🌊 QNH (Sea Level): ${qnh.toFixed(2)} hPa</div>
+                        <div class="altitude-details">📊 Your Pressure: ${currentPressure.toFixed(2)} hPa</div>
+                        <hr style="margin: 15px 0; opacity: 0.3;">
+                        <div class="altitude-value">🏔️ ${altitude.toFixed(1)} meters</div>
+                        <div class="altitude-details">(${(altitude * 3.28084).toFixed(1)} feet)</div>
+                        <div class="altitude-details" style="margin-top: 10px; font-size: 11px;">
+                            Temperature-compensated: ${altitudeTemp.toFixed(1)} m
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                // Handle errors
+                if (error.code === 1) {
+                    // User denied geolocation
+                    resultsDiv.innerHTML = `
+                        <div class="error-frame">
+                            ❌ Sorry, we cannot estimate the altitude without location data.
+                        </div>
+                    `;
+                } else if (error.code === 2) {
+                    // Position unavailable
+                    resultsDiv.innerHTML = `
+                        <div class="error-frame">
+                            ⚠️ Position unavailable. Please check your device's location settings.
+                        </div>
+                    `;
+                } else if (error.code === 3) {
+                    // Timeout
+                    resultsDiv.innerHTML = `
+                        <div class="error-frame">
+                            ⏱️ Location request timed out. Please try again.
+                        </div>
+                    `;
+                } else {
+                    // Other errors
+                    resultsDiv.innerHTML = `
+                        <div class="error-frame">
+                            ⚠️ Error: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Initialize on page load
+        initCalibrationGrid();
+    </script>
+</body>
+</html>
